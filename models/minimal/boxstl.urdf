@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<robot name="minimal_box">
+
+  <!-- base_link -->
+  <link name="base_link">
+
+    <!-- 可视化 -->
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://rm_sim_bringup/models/minimal/box.stl" scale="1 1 1"/>
+      </geometry>
+    </visual>
+
+    <!-- 碰撞 -->
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://rm_sim_bringup/models/minimal/box.stl" scale="1 1 1"/>
+      </geometry>
+    </collision>
+
+    <!-- 惯性信息 -->
+    <inertial>
+      <mass value="1.0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <!-- 若尺寸=0.5m 的立方体，惯性矩这样取即可 -->
+      <inertia ixx="0.02" ixy="0.0" ixz="0.0"
+               iyy="0.02" iyz="0.0"
+               izz="0.02"/>
+    </inertial>
+
+  </link>
+
+  <!-- 固定 joint -->
+  <joint name="fixed_to_world" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+</robot>

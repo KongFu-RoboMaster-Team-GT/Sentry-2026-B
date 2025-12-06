@@ -1,0 +1,29 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 50
+    use_sim_time: true
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    position_controller:
+      type: position_controllers/JointGroupPositionController
+
+position_controller:
+  ros__parameters:
+    joints:
+      - kneeRFD
+      - wheelRout
+      - kneeRBD
+      - crotchRB
+      - crotchLB
+      - kneeLBD
+      - wheelLout
+      - kneeLFD
+      - crotchLF
+      - crotchRF
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+      - velocity

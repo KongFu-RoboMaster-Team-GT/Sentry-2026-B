@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<robot name="minimal_box">
+
+  <!-- 单个 link：base_link -->
+  <link name="base_link">
+
+    <!-- 可视化 -->
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.5 0.5 0.5"/>   <!-- 默认 box  -->
+      </geometry>
+      <material name="gray">
+        <color rgba="0.7 0.7 0.7 1.0"/>
+      </material>
+    </visual>
+
+    <!-- 碰撞 -->
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.5 0.5 0.5"/>
+      </geometry>
+    </collision>
+
+    <!-- 惯性：不能缺 -->
+    <inertial>
+      <mass value="1.0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.02" ixy="0.0" ixz="0.0" iyy="0.02" iyz="0.0" izz="0.02"/>
+    </inertial>
+
+  </link>
+
+  <!-- 固定在 world 上 -->
+  <joint name="fixed_to_world" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0.25" rpy="0 0 0"/>
+  </joint>
+
+</robot>
