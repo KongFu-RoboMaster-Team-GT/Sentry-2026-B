@@ -2,7 +2,7 @@
 <robot name="minimal_stl_test" 
        xmlns:xacro="http://ros.org/wiki/xacro">  
        <xacro:property name="pkg_dir" value="package://rm_sim_bringup"/>  
-       <xacro:property name="mesh_file" value="models/minimal/box.stl"/> 
+       <xacro:property name="mesh_file" value="models/minimal/box.dae"/> 
        <link name="base_link">
     <visual>
       <geometry>

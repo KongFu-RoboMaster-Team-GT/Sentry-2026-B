@@ -2,31 +2,19 @@
 
 #### 1. 目标（Goal Setting）：我们现在要干什么？
 
+0. add arena model into simulation
 
-1. when boostraping gazebo, the robot model is missing. this is a path issue.
-  solution: (need verify) the example [urdf tutorial](https://github.com/ros/urdf_tutorial?tab=readme-ov-file) works normally, but it lies on ros system dir, not user dir.
-we can refer above example and try to migrate them to user dir.
+1. add ros2 controller. we want to control robot via gazebo fortress
 
+2. add livox mid360 simulation
 
-2. gazebo sim ros controller incomplete. I add gazebo plugin but not add ros2_control plugin yet.
-
-3. when using `launchemptyworld.py`, modified the `/models/arena3v3.world` file.
-search for this line: `<uri>/home/phage/Downloads/RMUL2026.stl</uri>`
-replace it with `/home/your usr name!!!!/path/to/rm_sim_bringup/models/RMUL2026.stl`
-
-Need to figure how to solve this stupid path problem, since target 1 sucks because same path problem.....
 
 ##### 2. 核心决定（Decision Log）：我们决定了什么？
 
-for target 1, I've try modified `package.xml`. this could be the problem
-we should check how does the xacro indexing the stl's. this coule also be the path problem
+use gazebo fortress.
 
-current launch script status:
-`/launch/eval_robot_only.py` bootstrap the world with a robot, but it is broken.
-you probably see gazebo stuck at loadup, consider use headless to improve this.
-(because parts missing happens even when I run official examples, strange)
-
-`launchemptyworld.py` relys on putting
+use sdf. 
+stop using urdf/xacro
 
 3. target 3 I already put stl under rm_sim_bringup
 
@@ -41,8 +29,8 @@ then follow the repo instruction to install it. remember using ros2 humble instr
 for the ip addr, config it. for host machine change your eth card, for ladar, the ip addr should be 192.168.1.1xx, xx is last two digit of broadcast code
 
 
+for running simulation see [launch.md](./launch.md)
 
----
 
 ##### 4. 理论知识（Knowledge Base）：我学会了什么？
 
@@ -54,8 +42,8 @@ when you not bootstrap any node, there are two default topics:
 
 
 Gazebo:
-urdf: used by ROS2 to descript movement of robot, part of robot OS
-urdf just a resources map, it descript the location of the parts `stl` file
+sdf: used by ROS2 to descript movement of robot, part of robot OS
+sdf just a resources map, it descript the location of the parts `stl` file
 
 
 
