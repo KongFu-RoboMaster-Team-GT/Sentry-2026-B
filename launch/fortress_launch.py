@@ -1,4 +1,5 @@
 import os
+import getpass
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable
@@ -6,14 +7,16 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 
+
 def generate_launch_description():
     # ---------------- 配置区域 ----------------
     # 这里的路径请根据你的实际情况修改
     # 建议将路径设置为你的工作空间路径或者包路径
-    model_path = '/home/phage/ros2_ws/ws_livox/src/rm_sim_bringup/models' 
-    model_dir = 'robot_fort'
+    pkgname = 'rm_sim_bringup'
+    pkgdir = get_package_share_directory(pkgname)
+    model_dir_name = 'robot_fort'
     model_name = 'robot_translated.sdf'
-    sdf_file = os.path.join(model_path, model_dir, model_name)
+    sdf_file = os.path.join(pkgdir, 'models', model_dir_name, model_name)
     
     # ---------------- 环境变量 ----------------
     # 这一步至关重要：告诉 Gazebo 去哪里找 stl 模型
@@ -22,7 +25,7 @@ def generate_launch_description():
     gz_resource_path = SetEnvironmentVariable(
         name='IGN_GAZEBO_RESOURCE_PATH',
         value=[
-            os.environ.get('IGN_GAZEBO_RESOURCE_PATH', '') + ':' + os.path.join(model_path, model_dir, 'assets')
+            os.environ.get('IGN_GAZEBO_RESOURCE_PATH', '') + ':' + os.path.join(pkgdir, 'models', model_dir_name, 'assets')
         ]
     )
 
