@@ -9,13 +9,13 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 def generate_launch_description():
 
     pkg_name = 'rm_sim_bringup'
-    pkg_share_dir = get_package_share_directory(pkg_name)
+    pkgdir = get_package_share_directory(pkg_name)
 
     world_file_name = 'arena3v3.world'
-    world_path = os.path.join(pkg_share_dir, 'models', world_file_name)
+    world_path = os.path.join(pkgdir, 'models', world_file_name)
 
     # Xacro
-    xacro_file = os.path.join(pkg_share_dir, 'models', 'minimal', 'minimal_test.xacro')
+    xacro_file = os.path.join(pkgdir, 'models', 'minimal', 'minimal_test.xacro')
 
     robot_description = Command(['xacro ', xacro_file])
 
