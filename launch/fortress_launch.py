@@ -6,9 +6,17 @@ from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetE
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
+from launch.actions import LogInfo
 
 
 def generate_launch_description():
+    #debug output
+    ign_verbosity = SetEnvironmentVariable(
+        name='IGN_VERBOSITY',
+        value='4' # 4 代表 Debug 级别，会输出大量的查找信息
+    )
+
+
     run_path = os.getcwd()
     # ---------------- 配置区域 ----------------
     # 这里的路径请根据你的实际情况修改
@@ -29,6 +37,19 @@ def generate_launch_description():
             os.environ.get('IGN_GAZEBO_RESOURCE_PATH', '') + ':' + os.path.join(pkgdir, 'models', model_dir_name, 'assets')
         ]
     )
+
+
+    world_dir_name = 'worlds'
+    world_filename = 'arena3v3.world'
+    world_file = os.path.join(pkgdir,'models', world_dir_name, world_filename)
+    # now exporting stl file location of world sdf. Remember to export stl file path to gazebo for each model files!!!!!!
+    gz_resource_path = SetEnvironmentVariable(
+        name='IGN_GAZEBO_RESOURCE_PATH',
+        value=[
+            os.environ.get('IGN_GAZEBO_RESOURCE_PATH', '') + ':' + os.path.join(pkgdir, 'models', world_dir_name, 'assets')
+        ]
+    )
+
     # ---------------- 启动 Gazebo ----------------
     # 使用 ros_gz_sim 提供的标准启动文件
     # [不報錯]
@@ -37,7 +58,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(pkg_ros_gz_sim, 'launch', 'gz_sim.launch.py')),
         launch_arguments={
-            'gz_args': '-r empty.sdf' # -r 表示自动开始运行 (Run)，不需要手动点 Play
+            'gz_args': ['-r ', world_file]  # -r 表示自动开始运行 (Run)，不需要手动点 Play
         }.items(),
     )
 
@@ -66,7 +87,20 @@ def generate_launch_description():
         output='screen'
     )
 
+    logoutput = (
+        f"world full path:{world_file}\n"
+        f"model full path:{sdf_file}\n"
+        f"model package path:{pkgdir}\n"
+        f"gazebo_stl_dir:{os.environ.get('IGN_GAZEBO_RESOURCE_PATH')}\n"
+    )
+    log_world_path = LogInfo(
+        msg=[logoutput]
+    )
+
+
     return LaunchDescription([
+        log_world_path,
+        ign_verbosity,
         gz_resource_path,
         gz_sim,
         spawn_entity,
