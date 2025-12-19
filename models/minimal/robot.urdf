@@ -2,6 +2,14 @@
 <!-- Generated using onshape-to-robot -->
 <!-- Onshape https://cad.onshape.com/documents/bc0d0975ec276c5374671cb8/w/5373e6274a1e7585a5564279/e/b3807e21a66143234f40482a -->
 <robot name="testing_urdfoutput">
+<<<<<<< HEAD
+=======
+<xacro:include filename="$(find . -name "livox_laser_simulation_ros2")/urdf/mid70.xacro" />
+  <!-- Radio -->
+  <xacro:mid70 name="livox" parent="base_link" topic="mid70">
+    <origin xyz="0 0 0.025" rpy="0 0 0"/>
+  </xacro:mid70>
+>>>>>>> 53ee389 (Radio init)
   <!-- Link GimbalStatorFixingCross -->
   <link name="GimbalStatorFixingCross">
     <inertial>
