@@ -237,13 +237,19 @@ void HAL_PCD_SuspendCallback(PCD_HandleTypeDef *hpcd)
 {
   /* Inform USB library that core enters in suspend Mode. */
   USBD_LL_Suspend((USBD_HandleTypeDef*)hpcd->pData);
-  __HAL_PCD_GATE_PHYCLOCK(hpcd);
   /* Enter in STOP mode. */
   /* USER CODE BEGIN 2 */
   if (hpcd->Init.low_power_enable)
   {
+    __HAL_PCD_GATE_PHYCLOCK(hpcd);
     /* Set SLEEPDEEP bit and SleepOnExit of Cortex System Control Register. */
     SCB->SCR |= (uint32_t)((uint32_t)(SCB_SCR_SLEEPDEEP_Msk | SCB_SCR_SLEEPONEXIT_Msk));
+  }
+  else
+  {
+    /* Robot firmware does not enter STOP or configure a USB wakeup EXTI.
+     * Keep the PHY clock running so enumeration/reconnect can continue. */
+    __HAL_PCD_UNGATE_PHYCLOCK(hpcd);
   }
   /* USER CODE END 2 */
 }
@@ -261,7 +267,7 @@ void HAL_PCD_ResumeCallback(PCD_HandleTypeDef *hpcd)
 #endif /* USE_HAL_PCD_REGISTER_CALLBACKS */
 {
   /* USER CODE BEGIN 3 */
-
+  __HAL_PCD_UNGATE_PHYCLOCK(hpcd);
   /* USER CODE END 3 */
   USBD_LL_Resume((USBD_HandleTypeDef*)hpcd->pData);
 }
