@@ -47,7 +47,14 @@ void MX_CAN1_Init(void)
   hcan1.Init.TimeTriggeredMode = DISABLE;
   hcan1.Init.AutoBusOff = DISABLE;
   hcan1.Init.AutoWakeUp = DISABLE;
+#if BOARD_ROLE == BOARD_UPPER
+  /* RM0090: one-shot mode also drops a frame on arbitration loss.
+   * CAN1 carries board control alongside higher-priority motor traffic.
+   * board_link.c bounds pending frames before enabling this retry policy. */
+  hcan1.Init.AutoRetransmission = ENABLE;
+#else
   hcan1.Init.AutoRetransmission = DISABLE;
+#endif
   hcan1.Init.ReceiveFifoLocked = DISABLE;
   hcan1.Init.TransmitFifoPriority = DISABLE;
   if (HAL_CAN_Init(&hcan1) != HAL_OK)

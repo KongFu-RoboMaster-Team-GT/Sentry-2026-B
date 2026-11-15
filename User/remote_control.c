@@ -8,6 +8,9 @@
 #include "main.h"
 #include "usart.h"
 #include "control_task.h"
+#if BOARD_ROLE != BOARD_SINGLE
+#include "board_link.h"
+#endif
 
 /* Debug: count RC IDLE events to help verify ISR firing */
 volatile uint32_t rc_idle_count = 0;
@@ -200,6 +203,9 @@ void RC_USART3_IRQHandler(void)
             key.pause = (rc_ctrl.rc.ch[7] > 0) ? 1u : 0u;
             /* ch9（四拨杆）：上拨<0=关，下拨>0=开，映射到btn_l供底盘跟随使用 */
             key.btn_l = (rc_ctrl.rc.ch[9] > 0) ? 1u : 0u;
+#if BOARD_ROLE == BOARD_UPPER
+            board_note_input();
+#endif
         }
         else if(this_time_rx_len == RC_FRAME_LENGTH_DBUS)
         {
@@ -216,6 +222,9 @@ void RC_USART3_IRQHandler(void)
             key.pause = (rc_ctrl.rc.ch[7] > 0) ? 1u : 0u;
             /* ch9（四拨杆）：上拨<0=关，下拨>0=开，映射到btn_l供底盘跟随使用 */
             key.btn_l = (rc_ctrl.rc.ch[9] > 0) ? 1u : 0u;
+#if BOARD_ROLE == BOARD_UPPER
+            board_note_input();
+#endif
         }
         else
         {

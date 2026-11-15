@@ -8,6 +8,7 @@
 #include "arm_math.h"
 #include "cmsis_os.h"
 #include "calibrate_task.h"
+#include "control_config.h"
 
 #define WHEEL_TO_CORE_DISTANCE 0.22873f
 #define WHEEL_RADIUS 0.075f

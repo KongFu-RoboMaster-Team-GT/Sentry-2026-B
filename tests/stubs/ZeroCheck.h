@@ -1,0 +1,1 @@
+/* Chassis test uses the original reference encoder and does not call ZeroCheck. */

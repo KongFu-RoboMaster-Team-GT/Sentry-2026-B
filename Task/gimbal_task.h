@@ -10,6 +10,7 @@
 #include "usbreceive_task.h"
 #include "SMC.h"
 #include "calibrate_task.h"
+#include "yaw_control.h"
 
 #define MOUSE_X_MAP (-1.0f)
 #define MOUSE_Y_MAP (-1.0f)
@@ -20,6 +21,8 @@ typedef struct
 	float target_pitch;
 	float yaw_output;
 	float pitch_output;
+    float measured_yaw;
+    float yaw_error;
 }gimbal_t;	
 
 extern gimbal_t gimbal;

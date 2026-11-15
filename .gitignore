@@ -34,6 +34,7 @@ desktop.ini
 /.vscode/
 /MDK-ARM/.vscode/
 /MDK-ARM/FINAL-2026/
+/MDK-ARM/build/
 /MDK-ARM/RTE/
 /MDK-ARM/DebugConfig/
 /MDK-ARM/*.log
@@ -42,3 +43,5 @@ desktop.ini
 # 保留已验证生成的烧录文件
 !firmware/
 !firmware/FINAL-2026.hex
+!firmware/UPPER.hex
+!firmware/LOWER.hex

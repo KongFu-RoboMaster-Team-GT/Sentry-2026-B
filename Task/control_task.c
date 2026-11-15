@@ -1,4 +1,7 @@
 #include "control_task.h"
+#if BOARD_ROLE != BOARD_SINGLE
+#include "board_link.h"
+#endif
 
 VTM_Data_t key;
 extern osThreadId calibrate_taskHandle;
@@ -71,6 +74,9 @@ void CONTROL_TASK(void const * argument)
 
             taskENTER_CRITICAL();
             key = parsed_key;
+#if BOARD_ROLE == BOARD_UPPER
+            board_note_input();
+#endif
             taskEXIT_CRITICAL();
 
             if (key.key_b == 1)

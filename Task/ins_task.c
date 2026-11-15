@@ -112,6 +112,7 @@ static void imu_temp_control(PID_t *imu, IMU_t *imu_data)
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
+#if BOARD_ROLE != BOARD_LOWER
     if(GPIO_Pin == INT1_ACCEL_Pin)
     {
         accel_update_flag |= 1 << IMU_DR_SHFITS;
@@ -133,14 +134,15 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     {
 
         //wake up the task
-        if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+        if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED && INS_task_local_handler != NULL)
         {
-            static BaseType_t xHigherPriorityTaskWoken;
+            BaseType_t xHigherPriorityTaskWoken = pdFALSE;
             vTaskNotifyGiveFromISR(INS_task_local_handler, &xHigherPriorityTaskWoken);
             portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
         }
 
     }
+#endif
 }
 
 static void imu_cmd_spi_dma(void)

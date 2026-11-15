@@ -33,6 +33,10 @@
 #include "usbreceive_task.h"
 #include "referee_task.h"
 #include "calibrate_task.h"
+#include "board_config.h"
+#if BOARD_ROLE != BOARD_SINGLE
+#include "board_link.h"
+#endif
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -139,13 +143,22 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
+#if BOARD_ROLE != BOARD_SINGLE
+  osThreadDef(board_link, BOARD_LINK_TASK, osPriorityHigh, 0, 512);
+  osThreadCreate(osThread(board_link), NULL);
+#endif
+#if BOARD_ROLE != BOARD_LOWER
   /* definition and creation of ins_task */
   osThreadDef(ins_task, INS_TASK, osPriorityRealtime, 0, 512);
   ins_taskHandle = osThreadCreate(osThread(ins_task), NULL);
 
   /* definition and creation of chassis_task */
+#endif
+#if BOARD_ROLE != BOARD_UPPER
   osThreadDef(chassis_task, CHASSIS_TASK, osPriorityHigh, 0, 512);
   chassis_taskHandle = osThreadCreate(osThread(chassis_task), NULL);
+#endif
+#if BOARD_ROLE != BOARD_LOWER
 
   /* definition and creation of gimbal_task */
   osThreadDef(gimbal_task, GIMBAL_TASK, osPriorityHigh, 0, 512);
@@ -170,6 +183,7 @@ void MX_FREERTOS_Init(void) {
   /* definition and creation of control_task */
   osThreadDef(control_task, CONTROL_TASK, osPriorityHigh, 0, 512);
   control_taskHandle = osThreadCreate(osThread(control_task), NULL);
+#endif
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */

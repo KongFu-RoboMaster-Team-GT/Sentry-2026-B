@@ -110,9 +110,12 @@ int main(void)
   MX_USART6_UART_Init();
 	MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
+#if BOARD_ROLE != BOARD_LOWER
   remote_control_init();
   HAL_TIM_PWM_Start(&htim10, TIM_CHANNEL_1);
+#endif
   can_filter_init();
+#if BOARD_ROLE != BOARD_LOWER
   while (BMI088_init())
   {
     ;
@@ -134,6 +137,7 @@ int main(void)
 
   IMU_Calibrate(0);
   hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
+#endif
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in cmsis_os2.c) */

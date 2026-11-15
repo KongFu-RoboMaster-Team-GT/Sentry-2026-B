@@ -4,7 +4,10 @@
 #include "struct_typedef.h" 
 #include "can.h"
 #include "main.h"
+#include "board_config.h"
 
+/* CAN1 is shared by both boards and the friction/pitch/trigger motors.
+ * Only UPPER sends motor commands on CAN1. LOWER owns CAN2. */
 #define CHASSIS_CAN hcan2
 #define FRICTION_CAN hcan1
 #define GIMBAL_PITCH_CAN hcan1

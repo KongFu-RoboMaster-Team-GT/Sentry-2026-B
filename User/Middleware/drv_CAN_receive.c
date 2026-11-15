@@ -1,4 +1,7 @@
 #include "drv_CAN_receive.h"
+#if BOARD_ROLE != BOARD_SINGLE
+#include "board_link.h"
+#endif
 
 
 extern CAN_HandleTypeDef hcan1;
@@ -43,7 +46,25 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 
   if (hcan->Instance == CAN1)
   {
-	  HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx_header_can1, rx_data_can1);
+#if BOARD_ROLE != BOARD_SINGLE
+      if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx_header_can1, rx_data_can1) != HAL_OK)
+      { ++board_diag.can1_rx_error_count; return; }
+      ++board_diag.can1_rx_count;
+      board_diag.last_can1_id = rx_header_can1.StdId;
+      if (rx_header_can1.IDE != CAN_ID_STD || rx_header_can1.RTR != CAN_RTR_DATA || rx_header_can1.DLC != 8)
+      { ++board_diag.can1_invalid_frame_count; return; }
+      if (board_link_receive(rx_header_can1.StdId, rx_data_can1)) return;
+#if BOARD_ROLE == BOARD_UPPER
+      if (rx_header_can1.StdId == BOARD_YAW_FEEDBACK_ID)
+      {
+          get_motor_measure(&motor_chassis_can2[4], rx_data_can1);
+          ++board_rx_count;
+          return;
+      }
+#endif
+#else
+      HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx_header_can1, rx_data_can1);
+#endif
       switch (rx_header_can1.StdId)
       {
 		  case CAN_3508_M1_ID:
@@ -55,6 +76,10 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 			// get motor id
 			i = rx_header_can1.StdId - CAN_3508_M1_ID;
 			get_motor_measure(&motor_chassis_can1[i], rx_data_can1);
+#if BOARD_ROLE == BOARD_UPPER
+            board_diag.motor_can1_last_tick_ms[i] = HAL_GetTick();
+            ++board_diag.motor_can1_rx_count[i];
+#endif
 			break;
 		  }
 		  default:
@@ -65,7 +90,16 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
   }
   else if (hcan->Instance == CAN2)
   {
+#if BOARD_ROLE == BOARD_LOWER
+    if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx_header_can2, rx_data_can2) != HAL_OK)
+    { ++lower_diag.can2_rx_error_count; return; }
+    ++lower_diag.can2_rx_count;
+    lower_diag.last_can2_id = rx_header_can2.StdId;
+    if (rx_header_can2.IDE != CAN_ID_STD || rx_header_can2.RTR != CAN_RTR_DATA || rx_header_can2.DLC != 8)
+    { ++lower_diag.can2_invalid_frame_count; return; }
+#else
     HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx_header_can2, rx_data_can2);
+#endif
       switch (rx_header_can2.StdId)
       {
 		  case CAN_3508_M1_ID:
@@ -78,6 +112,9 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 			// get motor id
 			i = rx_header_can2.StdId - CAN_3508_M1_ID;
 			get_motor_measure(&motor_chassis_can2[i], rx_data_can2);
+#if BOARD_ROLE == BOARD_LOWER
+            board_capture_feedback(i, rx_data_can2);
+#endif
 			break;
 		  }
 		  default:
@@ -99,6 +136,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 
 void CAN_cmd_pitch(int16_t pitch)
 {
+#if BOARD_ROLE == BOARD_SINGLE
   uint32_t send_mail_box;
   gimbal_tx_message.StdId = CAN_GIMBAL_ALL_ID;
   gimbal_tx_message.IDE = CAN_ID_STD;
@@ -107,10 +145,15 @@ void CAN_cmd_pitch(int16_t pitch)
   pitch_can_send_data[2] = (pitch >> 8);
   pitch_can_send_data[3] = pitch;
   HAL_CAN_AddTxMessage(&GIMBAL_PITCH_CAN, &gimbal_tx_message, pitch_can_send_data, &send_mail_box);
+#elif BOARD_ROLE == BOARD_UPPER
+  if (!board_motion_enabled()) pitch = 0;
+  board_send_motor(&GIMBAL_PITCH_CAN, CAN_GIMBAL_ALL_ID, 0, pitch, 0, 0);
+#endif
 }
 
 void CAN_cmd_yaw(int16_t yaw)
 {
+#if BOARD_ROLE == BOARD_SINGLE
   uint32_t send_mail_box;
   gimbal_tx_message.StdId = CAN_GIMBAL_ALL_ID;
   gimbal_tx_message.IDE = CAN_ID_STD;
@@ -119,6 +162,12 @@ void CAN_cmd_yaw(int16_t yaw)
   yaw_can_send_data[0] = (yaw >> 8);
   yaw_can_send_data[1] = yaw;
   HAL_CAN_AddTxMessage(&GIMBAL_YAW_CAN, &gimbal_tx_message, yaw_can_send_data, &send_mail_box);
+#elif BOARD_ROLE == BOARD_UPPER
+  board_set_yaw_command(yaw);
+#else
+  if (!board_yaw_enabled()) yaw = 0;
+  board_send_motor(&GIMBAL_YAW_CAN, CAN_GIMBAL_ALL_ID, yaw, 0, 0, 0);
+#endif
 }
 
 /**
@@ -129,6 +178,7 @@ void CAN_cmd_yaw(int16_t yaw)
 
 void CAN_cmd_chassis_reset_ID(void)
 {
+#if BOARD_ROLE != BOARD_UPPER
   uint32_t send_mail_box;
   chassis_tx_message.StdId = 0x700;
   chassis_tx_message.IDE = CAN_ID_STD;
@@ -144,6 +194,7 @@ void CAN_cmd_chassis_reset_ID(void)
   chassis_can_send_data[7] = 0;
 
   HAL_CAN_AddTxMessage(&CHASSIS_CAN, &chassis_tx_message, chassis_can_send_data, &send_mail_box);
+#endif
 }
 
 /**
@@ -156,6 +207,7 @@ void CAN_cmd_chassis_reset_ID(void)
  */
 void CAN_cmd_chassis(int16_t motor1, int16_t motor2, int16_t motor3, int16_t motor4)
 {
+#if BOARD_ROLE == BOARD_SINGLE
   uint32_t send_mail_box;
   chassis_tx_message.StdId = CAN_CHASSIS_ALL_ID;
   chassis_tx_message.IDE = CAN_ID_STD;
@@ -171,10 +223,21 @@ void CAN_cmd_chassis(int16_t motor1, int16_t motor2, int16_t motor3, int16_t mot
   chassis_can_send_data[7] = motor4;
 
   HAL_CAN_AddTxMessage(&CHASSIS_CAN, &chassis_tx_message, chassis_can_send_data, &send_mail_box);
+#elif BOARD_ROLE == BOARD_UPPER
+  /* Chassis PID runs only on LOWER; never send upper-local CAN2 currents. */
+#else
+  if (!board_motion_enabled())
+  {
+      if (motor1 || motor2 || motor3 || motor4) ++lower_diag.send_gate_drop_count;
+      motor1 = motor2 = motor3 = motor4 = 0;
+  }
+  board_send_motor(&CHASSIS_CAN, CAN_CHASSIS_ALL_ID, motor1, motor2, motor3, motor4);
+#endif
 }
 
 void CAN_cmd_shoot(int16_t motor1, int16_t motor2, int16_t shoot)
 {
+#if BOARD_ROLE == BOARD_SINGLE
   uint32_t send_mail_box;
   gimbal_tx_message.StdId = 0x200;
   gimbal_tx_message.IDE = CAN_ID_STD;
@@ -190,6 +253,11 @@ void CAN_cmd_shoot(int16_t motor1, int16_t motor2, int16_t shoot)
   shoot_can_send_data[6] = 0;
   shoot_can_send_data[7] = 0;
   HAL_CAN_AddTxMessage(&SHOOT_CAN, &gimbal_tx_message, shoot_can_send_data, &send_mail_box);
+#elif BOARD_ROLE == BOARD_UPPER
+  /* Preserve the original calibration stop even when SHOOTER_TASK runs next. */
+  if (!board_motion_enabled() || calibrate.flag == 1) motor1 = motor2 = shoot = 0;
+  board_send_motor(&SHOOT_CAN, CAN_CHASSIS_ALL_ID, motor1, motor2, shoot, 0);
+#endif
 }
 
 
