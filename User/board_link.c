@@ -2,6 +2,7 @@
 #include "drv_CAN_receive.h"
 #include "cmsis_os.h"
 #include <string.h>
+#include "motion.h"
 
 volatile uint8_t board_armed;
 volatile uint32_t board_rx_count;
@@ -230,7 +231,7 @@ void board_note_input(void)
 uint8_t board_motion_enabled(void)
 {
 #if BOARD_ROLE == BOARD_UPPER
-    return input_seen && fresh(input_tick, BOARD_RC_TIMEOUT_MS);
+    return !pc_stop_active() && input_seen && fresh(input_tick, BOARD_RC_TIMEOUT_MS);
 #else
     return chassis_seen && chassis_enable && fresh(chassis_tick, BOARD_LINK_TIMEOUT_MS);
 #endif

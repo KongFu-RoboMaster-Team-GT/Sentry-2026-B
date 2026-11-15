@@ -39,6 +39,12 @@ void SHOOTER_TASK(void const * argument)
             {
                 shooter_control.shoot_flag = 0u;
             }
+            if (pc_stop_active() || calibrate.flag == 1)
+                shooter_control.shoot_flag = 0;
+#if BOARD_ROLE == BOARD_UPPER
+            if (!board_motion_enabled()) shooter_control.shoot_flag = 0;
+#endif
+            pc_note_fire(shooter_control.shoot_flag);
 			
 			shooter_control.friction_omega[0] = get_friction_motor_measure_point(0)->speed_rpm * 0.1047f;
       shooter_control.friction_omega[1] = get_friction_motor_measure_point(1)->speed_rpm * 0.1047f;
@@ -76,6 +82,8 @@ void SHOOTER_TASK(void const * argument)
         }
         else if (shooter_control.shoot_flag == 0)
         {
+            uint8_t i;
+            for (i = 0; i < 3; ++i) PID_Clear_Error(&shooter[i]);
             CAN_cmd_shoot(0, 0, 0);
         }
 				
@@ -90,7 +98,7 @@ static void output_map(float *value)
 
 static void km_control(VTM_Data_t *key, motion_t *motion, shooter_control_t *shooter_control)
 {
-    shooter_control->shoot_flag = (key->mouse_btn_r == 0) ? key->mouse_btn_l : motion->auto_fire_detect;
+    shooter_control->shoot_flag = (key->mouse_btn_r == 0) ? key->mouse_btn_l : pc_fire_requested();
 }
 
 #define RC_SINGLE_SHOT_HOLD_TICKS 200u

@@ -442,7 +442,9 @@ static void Referee_Solve_Single_Packet(Referee_System_t *ref, uint8_t *packet_p
     // 根据命令码分发数据到对应的结构体
     switch (tmp_buffer->Referee_Command_ID) {
         case Referee_Command_ID_GAME_STATUS:
+            taskENTER_CRITICAL();
             memcpy(&ref->Game_Status, tmp_buffer->Data, sizeof(struct Struct_Referee_Rx_Data_Game_Status));
+            taskEXIT_CRITICAL();
             break;
         case Referee_Command_ID_GAME_RESULT:
             memcpy(&ref->Game_Result, tmp_buffer->Data, sizeof(struct Struct_Referee_Rx_Data_Game_Result));
@@ -454,10 +456,14 @@ static void Referee_Solve_Single_Packet(Referee_System_t *ref, uint8_t *packet_p
             memcpy(&ref->Event_Self_Data, tmp_buffer->Data, sizeof(struct Struct_Referee_Rx_Data_Event_Self_Data));
             break;
         case Referee_Command_ID_ROBOT_STATUS:
+            taskENTER_CRITICAL();
             memcpy(&ref->Robot_Status, tmp_buffer->Data, sizeof(struct Struct_Referee_Rx_Data_Robot_Status));
+            taskEXIT_CRITICAL();
             break;
         case Referee_Command_ID_ROBOT_POWER_HEAT:
+            taskENTER_CRITICAL();
             memcpy(&ref->Robot_Power_Heat, tmp_buffer->Data, sizeof(struct Struct_Referee_Rx_Data_Robot_Power_Heat));
+            taskEXIT_CRITICAL();
             break;
         case Referee_Command_ID_ROBOT_POSITION:
             memcpy(&ref->Robot_Position, tmp_buffer->Data, sizeof(struct Struct_Referee_Rx_Data_Robot_Position));
@@ -469,7 +475,9 @@ static void Referee_Solve_Single_Packet(Referee_System_t *ref, uint8_t *packet_p
             memcpy(&ref->Robot_Damage, tmp_buffer->Data, sizeof(struct Struct_Referee_Rx_Data_Robot_Damage));
             break;
         case Referee_Command_ID_ROBOT_REMAINING_AMMO:
+            taskENTER_CRITICAL();
             memcpy(&ref->Robot_Remaining_Ammo, tmp_buffer->Data, sizeof(struct Struct_Referee_Rx_Data_Robot_Remaining_Ammo));
+            taskEXIT_CRITICAL();
             break;
         case Referee_Command_ID_INTERACTION: {
             uint16_t copy_length = tmp_buffer->Data_Length > sizeof(struct Struct_Referee_Rx_Data_Interaction) ? 

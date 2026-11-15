@@ -1,4 +1,5 @@
 /* Actual receiver, CAN routing, transport, PID and local chassis task under ARM. */
+#include "../User/PC/motion.c"
 #include "../User/board_link.c"
 #include "../User/Middleware/drv_CAN_receive.c"
 #include "../User/remote_control.c"
@@ -18,7 +19,6 @@ typedef struct {
     float target_yaw, target_pitch, yaw_output, pitch_output, measured_yaw, yaw_error;
 } gimbal_t;
 test_mahony_t mahony;
-usb_t usb;
 #define rc_control test_gimbal_rc_control
 #define km_control test_gimbal_km_control
 #define rc_delta_with_deadband test_gimbal_rc_delta_with_deadband
@@ -35,7 +35,6 @@ usb_t usb;
 #undef output_map
 #undef rc_control
 #undef km_control
-motion_t motion;
 Referee_System_t referee;
 #endif
 
@@ -431,7 +430,7 @@ void osDelayUntil(uint32_t *wake, uint32_t period)
             CHECK(last_id == 0x1FE && get16(last_data + 2) == 500);
         }
         if (shooter_steps == 3) calibrate.flag = 1;
-        if (shooter_steps == 4) { CHECK(shooter_control.shoot_flag == 1); calibrate.flag = 0; }
+        if (shooter_steps == 4) { CHECK(shooter_control.shoot_flag == 0); calibrate.flag = 0; }
         if (shooter_steps == 5 || shooter_steps == 7) rc_ctrl.rc.ch[8] = 0;
         if (shooter_steps == 6) rc_ctrl.rc.ch[8] = 1;
         board_note_input();
@@ -672,9 +671,13 @@ static void yaw_frame(uint8_t seq, uint8_t enable, uint8_t corrupt)
     board_link_receive(BOARD_YAW_COMMAND_ID, d);
 }
 #endif
+#include "usb_cdc_arm.c"
+#include "serial_protocol_arm.c"
 void test_main(void)
 {
     uint32_t count;
+    test_usb_transport();
+    test_serial_protocol();
     tick = 1000;
     CHECK(board_diag.role == BOARD_ROLE && board_diag.protocol_version == 3);
 #if BOARD_ROLE != BOARD_SINGLE

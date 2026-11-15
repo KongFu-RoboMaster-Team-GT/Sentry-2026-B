@@ -1,4 +1,5 @@
 #include "chassis_task.h"
+#include "motion.h"
 #include "control_geometry.h"
 #if BOARD_ROLE == BOARD_LOWER
 #include "board_link.h"
@@ -105,6 +106,16 @@ void CHASSIS_TASK(void const * argument)
 		chassis_motion.chassis_target_omega = 0.0f;
     while(1)
     {
+#if BOARD_ROLE == BOARD_SINGLE
+            if (pc_stop_active()) {
+                uint8_t i;
+                for (i = 0; i < 4; ++i) PID_Clear_Error(&chassis[i]);
+                PID_Clear_Error(&follow_pid);
+                CAN_cmd_chassis(0, 0, 0, 0);
+                osDelayUntil(&xLastWakeTime, xFrequency);
+                continue;
+            }
+#endif
 #if BOARD_ROLE == BOARD_LOWER
             uint8_t motor_index;
             uint8_t previous_stale = lower_diag.stale_wheel_mask;

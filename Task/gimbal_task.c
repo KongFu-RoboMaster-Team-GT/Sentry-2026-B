@@ -177,6 +177,7 @@ void GIMBAL_TASK(void const *pvParameters)
     gimbal.target_yaw = mahony.YAW;
 #endif
     gimbal.target_pitch = mahony.PITCH;
+    pc_note_attitude(mahony.YAW);
     SMC_IntegralClear(&yaw);
     SMC_IntegralClear(&pitch);
 
@@ -190,11 +191,26 @@ void GIMBAL_TASK(void const *pvParameters)
 #endif
     while (1)
     {
+            pc_note_attitude(mahony.YAW);
+#if BOARD_ROLE == BOARD_SINGLE
+            if (pc_stop_active())
+            {
+                pc_clear_command();
+                CAN_cmd_pitch(0); CAN_cmd_yaw(0);
+                SMC_Clear(&yaw); SMC_Clear(&pitch);
+                gimbal.target_yaw = mahony.YAW;
+                gimbal.target_pitch = mahony.PITCH;
+                pitch_cmd_last = yaw_rate_dps_lpf = pitch_rate_dps_lpf = 0;
+                osDelayUntil(&xLastWakeTime, xFrequency);
+                continue;
+            }
+#endif
 #if BOARD_ROLE == BOARD_UPPER
             uint8_t valid_yaw = control_finite(mahony.YAW) && control_finite(mahony.g_smc[2]);
             uint8_t valid_pitch = control_finite(mahony.PITCH) && control_finite(mahony.g_smc[1]);
             if (calibrate.flag == 1 || !board_motion_enabled())
             {
+                pc_clear_command();
                 CAN_cmd_pitch(0); CAN_cmd_yaw(0);
                 if (calibrate.flag == 1) CAN_cmd_shoot(0, 0, 0);
                 if (valid_yaw)
@@ -260,8 +276,11 @@ void GIMBAL_TASK(void const *pvParameters)
 			}
 			else if (key.sw == 0)
 			{
+                pc_clear_command();
 				rc_control(&gimbal);
 			}
+
+            else pc_clear_command();
 				
 #if BOARD_ROLE != BOARD_UPPER
       zerocheckangle(&gimbal.target_yaw, &mahony.YAW);
@@ -364,6 +383,8 @@ void GIMBAL_TASK(void const *pvParameters)
 
 static void km_control(gimbal_t *gimbal)
 {
+    float aim_yaw, aim_pitch;
+    uint8_t aim_ready = pc_take_aim(&aim_yaw, &aim_pitch);
     if (key.mouse_btn_r == 0)
     {
         int16_t mx = mouse_delta_with_deadband(key.mouse_x);
@@ -373,16 +394,11 @@ static void km_control(gimbal_t *gimbal)
     }
     else if (key.mouse_btn_r == 1)
     {
-#if BOARD_ROLE == BOARD_UPPER
-        if (control_finite(usb.deltaYaw) && control_abs(usb.deltaYaw) <= 180.0f)
-            gimbal->target_yaw += usb.deltaYaw;
-#else
-        gimbal->target_yaw +=  usb.deltaYaw;
-#endif
-        gimbal->target_pitch +=  usb.deltaPitch;
+        if (aim_ready) {
+            gimbal->target_yaw += aim_yaw;
+            gimbal->target_pitch += aim_pitch;
+        }
     }
-	usb.deltaPitch = 0.0f;
-	usb.deltaYaw = 0.0f;
 }
 
 static void rc_control(gimbal_t *gimbal)

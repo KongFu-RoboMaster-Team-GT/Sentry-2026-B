@@ -261,6 +261,10 @@ bit4–9=W/S/A/D/Shift/F，bit10=原校准清零标志，bit11=原输入有效�
 yaw 原控制任务20ms未更新缓存时不继续发送旧的非零指令。
 无新增中位拨杆、回中或全电机解锁条件。
 
+## 上位机通信协议联调分支
+
+`test/serial-protocol` 使用上板USB CDC实现 `AA 55 CMD LEN DATA SUM8`，支持CMD01角度修正/开火、CMD02裁判查询、CMD03相对开机朝向查询、CMD04全车输出急停。保留原右键自瞄使能，上位机开火请求200ms超时。ZoneIsOurs暂为false；字段定义、原文示例纠错、软件验证边界和主机工具见 [联调说明](docs/serial-protocol-integration.md)。正常底盘和小陀螺拨杆映射不变。
+
 ## 验证
 
 `tests/run_protocol.py` 用 ARMCC 编译实际原遥控解析、CAN 路由和板间传输代码，在 Unicorn 中执行。
