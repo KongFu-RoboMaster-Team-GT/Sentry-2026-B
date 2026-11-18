@@ -9,7 +9,7 @@ static volatile uint32_t command_tick;
 static uint8_t rx_ring[PC_RX_CAPACITY];
 static uint32_t rx_time[PC_RX_CAPACITY];
 static volatile uint16_t rx_head, rx_tail;
-static uint8_t frame[14], frame_used;
+static uint8_t frame[17], frame_used;
 static uint32_t partial_tick, parser_tick;
 static uint8_t replies[PC_REPLY_CAPACITY][PC_REPLY_MAX];
 static uint8_t reply_len[PC_REPLY_CAPACITY], reply_head, reply_tail, reply_count;
@@ -125,14 +125,15 @@ static uint8_t request_length(uint8_t cmd)
 {
     switch (cmd) {
         case 1: return 9;
-        case 2: case 3: return 0;
+        case 2: case 3: case 6: return 0;
         case 4: return 1;
+        case 5: return 12;
         default: return 0xFF;
     }
 }
 static uint8_t dispatch(void)
 {
-    uint8_t data[14]; uint32_t mask;
+    uint8_t data[16]; uint32_t mask;
     switch (frame[2]) {
         case 1: {
             float yaw_deg = get_float(frame + 4), pitch_deg = get_float(frame + 8);
@@ -162,6 +163,16 @@ static uint8_t dispatch(void)
             if (frame[4] > 1) return 0;
             mask = pc_lock(); stop_latched = frame[4]; clear_command_locked();
             effective_fire = 0; pc_unlock(mask); ++pc_diag.stop_commands; break;
+        case 5:
+            if (!finite_float(get_float(frame + 4)) || !finite_float(get_float(frame + 8)) ||
+                !finite_float(get_float(frame + 12))) return 0;
+            data[0] = PC_CHASSIS_CONTROL_UNSUPPORTED;
+            reply(5, data, 1); break;
+        case 6:
+            memset(data, 0, sizeof(data));
+            data[12] = pc_stop_active() ? PC_CHASSIS_STATE_ESTOP : PC_CHASSIS_STATE_UNKNOWN;
+            data[13] = PC_VELOCITY_FEEDBACK_INVALID;
+            reply(6, data, sizeof(data)); break;
         default: return 0;
     }
     return 1;
