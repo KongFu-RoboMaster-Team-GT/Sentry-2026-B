@@ -1,0 +1,1 @@
+/* No BSP functions are required by the receiver protocol tests. */

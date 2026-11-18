@@ -1,0 +1,47 @@
+# Keil MDK 编译产物
+*.o
+*.d
+*.axf
+*.hex
+*.bin
+*.map
+*.lnp
+*.dep
+*.uvguix.*
+*.uvoptx
+*.bak
+*.lst
+*.crf
+*.iex
+
+# Keil 输出目录
+Output/
+Listings/
+Objects/
+RTE/
+DebugConfig/
+
+# 调试相关
+*.JLinkLog
+*.log
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# 当前工程的本机配置与 Keil 生成目录
+/.claude/
+/.vscode/
+/MDK-ARM/.vscode/
+/MDK-ARM/FINAL-2026/
+/MDK-ARM/build/
+/MDK-ARM/RTE/
+/MDK-ARM/DebugConfig/
+/MDK-ARM/*.log
+/MDK-ARM/*.lst
+
+# 保留已验证生成的烧录文件
+!firmware/
+!firmware/FINAL-2026.hex
+!firmware/UPPER.hex
+!firmware/LOWER.hex
